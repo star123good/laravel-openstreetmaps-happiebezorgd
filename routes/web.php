@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::domain('happiebezorgd.nl')->group(function () {
+Route::domain('localhost')->group(function () {
     Route::get('/', function() {
     	return view('welcome');
     });
