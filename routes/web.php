@@ -19,7 +19,9 @@ Route::domain('localhost')->group(function () {
     });
     Auth::routes();
 
-	Route::get('/home', 'HomeController@index')->name('home');
+    Route::get('/home', 'HomeController@index')->name('home');
+    
+	Route::get('/openstreetmap', 'HomeController@openstreetmap');
 });
 
 Route::domain('connect.happiebezorgd.nl')->group(function () {
