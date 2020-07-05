@@ -29,22 +29,40 @@ class HomeController extends Controller
     /**
      * overpass query
      */
-    private function overpassQuery()
+    private function overpassQuery($kind, $data)
     {
-        $query = '
-            [out:json][timeout:25];
-            (
-            node["amenity"="restaurant"]({{bbox}});
-            way["amenity"="restaurant"]({{bbox}});
-            relation["amenity"="restaurant"]({{bbox}});
-            node["amenity"="fast_food"]({{bbox}});
-            way["amenity"="fast_food"]({{bbox}});
-            relation["amenity"="fast_food"]({{bbox}});
-            );
-            out body;
-            >;
-            out skel qt;
-        ';
+        $type = 'json';
+        $timeout = 100;
+        $amenities = ['restaurant', 'fast_food'];
+
+        $query = '[out:' . $type . ']';
+        $query .= '[timeout:' . $timeout . ']';
+        $query .= ';';
+        $query .= '(';
+
+        foreach($amenities as $amenity) {
+            if ($kind == 'bbox') {
+                $bbox = implode(',', $data);
+                $query .= 'nwr["amenity"="' . $amenity . '"](' . $bbox . ');';
+            }
+            else if ($kind == 'name') {
+                $name = $data;
+                $query .= 'nwr["amenity"="' . $amenity . '"]["name"="' . $name . '"];';
+            }
+            else if ($kind == 'postal_code') {
+                $postal_code = $data;
+                $query .= 'nwr["amenity"="' . $amenity . '"]["addr:postcode"=' . $postal_code . '];';
+            }
+        }
+
+        $query .= ');';
+        $query .= 'out body;';
+        $query .= '>;';
+        $query .= 'out skel qt;';
+
+        $query = "http://overpass-api.de/api/interpreter?data=" . urlencode($query);
+
+        return $query;
     }
 
     /**
@@ -52,19 +70,41 @@ class HomeController extends Controller
      */
     private function overpassApi($query)
     {
-        $node_xml = file_get_contents("http://overpass-api.de/api/interpreter?data=" . urlencode($query));
-        return $node_xml;
+        try {
+            $response = file_get_contents($query);
+            $data = json_decode($response, true);
+            $data = $data['elements'];
+            $data = array_filter($data, function($e) {
+                return (isset($e['tags']['name']));
+            });
+        }
+        catch(Exception $e) {
+            $data = array();
+        }
+
+        return $data;
     }
 
     /**
      * GET /openstreetmap
      */
-    public function openstreetmap()
+    public function openstreetmap(Request $request)
     {
-        $node_id = 1422314245;
-        $query= "node($node_id);out;";
-        $node_xml = file_get_contents("http://overpass-api.de/api/interpreter?data=" . urlencode($query));
-        
-        return view('openstreetmap', ['node_xml' => $node_xml]);
+        if ($request->has('postal_code')) {
+            $postal_code = $request->input('postal_code');
+            $query = $this->overpassQuery('postal_code', $postal_code);
+            $result = $this->overpassApi($query);
+        }
+        else {
+            $postal_code = null;
+            $query = null;
+            $result = null;
+        }
+
+        return view('openstreetmap', [
+            'postal_code' => $postal_code, 
+            'query' => $query, 
+            'result' => $result,
+        ]);
     }
 }

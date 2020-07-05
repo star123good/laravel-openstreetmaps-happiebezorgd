@@ -9,7 +9,10 @@
 <style>
     #map {
         width: 100%;
-        height: 500px;
+        /* height: 500px; */
+    }
+    textarea {
+        min-height: 120px;
     }
 </style>
 @endsection
@@ -19,7 +22,20 @@
     <div class="row justify-content-center">
         <div class="col-md-12">
             <div id="map"></div>
-            <p>{{ $node_xml }}</p>
+            <h1 class="text-center">Find all restaurants</h1>
+            <h3 class="mt-lg-3">Postal Code:</h3>
+            <form action="" method="GET">
+                <input type="text" name="postal_code" placeholder="Type the postal code">
+                <button type="submit">Search</button>
+            </form>
+            @if($postal_code != null)
+                <h3 class="mt-lg-3">Result({{ $postal_code }}):</h3>
+                <ul>
+                    @foreach($result as $row)
+                        <li>{{ $row['tags']['name'] }}</li>
+                    @endforeach
+                </ul>
+            @endif
         </div>
     </div>
 </div>
