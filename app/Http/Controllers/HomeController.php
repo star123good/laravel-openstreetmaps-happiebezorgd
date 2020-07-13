@@ -51,7 +51,7 @@ class HomeController extends Controller
             }
             else if ($kind == 'postal_code') {
                 $postal_code = $data;
-                $query .= 'nwr["amenity"="' . $amenity . '"]["addr:postcode"=' . $postal_code . '];';
+                $query .= 'nwr["amenity"="' . $amenity . '"]["addr:postcode"="' . $postal_code . '"];';
             }
         }
 
@@ -60,7 +60,9 @@ class HomeController extends Controller
         $query .= '>;';
         $query .= 'out skel qt;';
 
-        $query = "http://overpass-api.de/api/interpreter?data=" . urlencode($query);
+        $query = "https://overpass-api.de/api/interpreter?data=" . urlencode($query);
+        // $query = "https://lz4.overpass-api.de/api/interpreter?data=" . urlencode($query);
+        // $query = "https://z.overpass-api.de/api/interpreter?data=" . urlencode($query);
 
         return $query;
     }
